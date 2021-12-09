@@ -10,6 +10,7 @@ class TagSerializer(ModelSerializer):
         fields = [
             'name',
             'slug',
+            'id',
         ]
 
 
@@ -46,6 +47,7 @@ class PostSerializer(ModelSerializer):
             'quizzes_count',
             'views_count',
             'blog',
+            'id',
         ]
         read_only_fields = ['likes_count', 'comments_count', 'quizzes_count', 'views_count']
 
