@@ -52,7 +52,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     last_login = models.DateTimeField(verbose_name="Последняя дата захода", auto_now=True)
     date_joined = models.DateTimeField(verbose_name="Дата регистрации", auto_now_add=True)
     role = models.CharField(verbose_name="Роль", choices=ROLE_CHOICES, max_length=15, default='User')
-    is_active = models.BooleanField(default=False, verbose_name="Active",
+    is_active = models.BooleanField(default=True, verbose_name="Active",
                                     help_text='Определяет, следует ли считать этого пользователя активным. '
                                               'Снимите этот флажок вместо удаления учетных записей.')
     is_staff = models.BooleanField(default=False, verbose_name="Staff status",
