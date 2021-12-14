@@ -25,6 +25,17 @@ class PostItem(models.Model):
         return f'Пост: {self.title}'
 
 
+class UserPostRelation(models.Model):
+    class Meta:
+        verbose_name = 'Взаимодействие пользователя'
+        verbose_name_plural = 'Взаимодействия пользователя'
+
+    post = models.ForeignKey(PostItem, on_delete=CASCADE)
+    user = models.ForeignKey(CustomUser, on_delete=CASCADE, related_name='post_relations')
+    like = models.BooleanField(default=False)
+    watched = models.BooleanField(default=False)
+
+
 class Tag(models.Model):
     class Meta:
         verbose_name = 'Тег поста'
@@ -56,3 +67,24 @@ class Blog(models.Model):
 
     def __str__(self):
         return f'Блог: {self.title}'
+
+
+class Comment(models.Model):
+    class Meta:
+        verbose_name = 'Комментарий'
+        verbose_name_plural = 'Комментарии'
+
+    text = models.CharField(max_length=1000, verbose_name='Текст комментария')
+    owner = models.ForeignKey(CustomUser, verbose_name='Владелец комментария', related_name='comments',
+                              on_delete=CASCADE)
+    post = models.ForeignKey(PostItem, verbose_name='Откомментированный пост', related_name='comments',
+                             on_delete=CASCADE)
+
+
+# class Quiz(models.Model):
+#     class Meta:
+#         verbose_name = 'Комментарий'
+#         verbose_name_plural = 'Комментарии'
+#
+#     post = models.ForeignKey(PostItem, verbose_name='Откомментированный пост', related_name='comments',
+#                              on_delete=CASCADE)

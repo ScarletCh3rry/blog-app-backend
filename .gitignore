@@ -3,3 +3,5 @@
 /media
 
 !/media/default.jpg
+
+/db.sqlite3

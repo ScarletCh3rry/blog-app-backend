@@ -15,3 +15,13 @@ class TagAdmin(admin.ModelAdmin):
 @admin.register(Blog)
 class BlogAdmin(admin.ModelAdmin):
     pass
+
+
+@admin.register(UserPostRelation)
+class UserPostRelationAdmin(admin.ModelAdmin):
+    list_display = [
+        'post',
+        'user',
+        'like',
+        'watched'
+    ]
