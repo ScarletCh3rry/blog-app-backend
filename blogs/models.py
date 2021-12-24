@@ -3,6 +3,7 @@ from django.db import models, IntegrityError
 from django.db.models import CASCADE
 from django.utils.text import slugify
 
+from blogs.utils import use_slugify
 from users.models import CustomUser
 
 
@@ -10,6 +11,7 @@ class PostItem(models.Model):
     class Meta:
         verbose_name = 'Пост'
         verbose_name_plural = 'Посты'
+        unique_together = ('title', 'blog')
 
     title = models.CharField(max_length=20, verbose_name='Название поста')
     description = models.TextField(verbose_name='Описание поста')
@@ -20,9 +22,14 @@ class PostItem(models.Model):
     quizzes_count = models.PositiveIntegerField(verbose_name='Количество опросников', default=0)
     views_count = models.PositiveIntegerField(verbose_name='Количество просмотров', default=0)
     blog = models.ForeignKey('Blog', verbose_name='Блог', related_name='posts', on_delete=CASCADE)
+    slug = models.SlugField(verbose_name='Путь поста')
 
     def __str__(self):
         return f'Пост: {self.title}'
+
+    def save(self, *args, **kwargs):
+        self.slug = use_slugify(self.title)
+        super().save(*args, **kwargs)
 
 
 class UserPostRelation(models.Model):
@@ -48,12 +55,7 @@ class Tag(models.Model):
         return f'Тег: {self.name}'
 
     def save(self, *args, **kwargs):
-        translated = self.name.translate(
-            str.maketrans(
-                "абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ",
-                "abvgdeejzijklmnoprstufhzcss_y_euaABVGDEEJZIJKLMNOPRSTUFHZCSS_Y_EUA"
-            ))
-        self.slug = slugify(translated)
+        self.slug = use_slugify(self.name)
         super().save(*args, **kwargs)
 
 
@@ -61,12 +63,19 @@ class Blog(models.Model):
     class Meta:
         verbose_name = 'Блог'
         verbose_name_plural = 'Блоги'
+        unique_together = ('title', 'owner')
 
     title = models.CharField(max_length=20, verbose_name='Название блога')
+    description = models.CharField(max_length=400, verbose_name='Описание блога')
     owner = models.ForeignKey(CustomUser, verbose_name='Владелец блога', related_name='blogs', on_delete=CASCADE)
+    slug = models.SlugField(verbose_name='Путь блога')
 
     def __str__(self):
         return f'Блог: {self.title}'
+
+    def save(self, *args, **kwargs):
+        self.slug = use_slugify(self.title)
+        super().save(*args, **kwargs)
 
 
 class Comment(models.Model):
@@ -79,7 +88,6 @@ class Comment(models.Model):
                               on_delete=CASCADE)
     post = models.ForeignKey(PostItem, verbose_name='Откомментированный пост', related_name='comments',
                              on_delete=CASCADE)
-
 
 # class Quiz(models.Model):
 #     class Meta:

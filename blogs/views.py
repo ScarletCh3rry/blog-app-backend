@@ -1,11 +1,12 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, filters
+from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 
 from blogs.filters import PostFilterSet
-from blogs.models import PostItem, UserPostRelation, Tag
+from blogs.models import PostItem, UserPostRelation, Tag, Blog
 from blogs.serializers import PostSerializer, PostLikeSerializer, TagSerializer, CreatePostSerializer, \
-    CreateBlogSerializer
+    CreateBlogSerializer, BlogSerializer, FullBlogSerializer
 from users.models import CustomUser
 
 
@@ -41,8 +42,6 @@ class PostTagsView(generics.ListAPIView):
     serializer_class = TagSerializer
     filter_backends = [filters.SearchFilter]
     search_fields = ['name', 'slug']
-    # filter_backends = [DjangoFilterBackend]
-    # filterset_class = TagFilterSet
 
 
 class CreatePostView(generics.CreateAPIView):
@@ -53,3 +52,23 @@ class CreatePostView(generics.CreateAPIView):
 class CreateBlogView(generics.CreateAPIView):
     serializer_class = CreateBlogSerializer
     permission_classes = [IsAuthenticated]
+
+
+class BlogView(generics.RetrieveAPIView):
+    serializer_class = FullBlogSerializer
+    queryset = Blog.objects.all()
+
+    def get_object(self):
+        obj = get_object_or_404(self.queryset, owner__login=self.kwargs['login'], slug=self.kwargs['slug'])
+        return obj
+
+
+class PostView(generics.RetrieveAPIView):
+    serializer_class = PostSerializer
+    queryset = PostItem.objects.all()
+
+    def get_object(self):
+        obj = get_object_or_404(self.queryset, blog__owner__login=self.kwargs['login'],
+                                blog__slug=self.kwargs['blog_slug'],
+                                slug=self.kwargs['post_slug'])
+        return obj

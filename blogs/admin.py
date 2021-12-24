@@ -14,7 +14,7 @@ class TagAdmin(admin.ModelAdmin):
 
 @admin.register(Blog)
 class BlogAdmin(admin.ModelAdmin):
-    pass
+    readonly_fields = ('slug',)
 
 
 @admin.register(UserPostRelation)

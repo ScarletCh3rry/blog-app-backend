@@ -5,7 +5,7 @@ from django.db import models
 
 
 class CustomUserManager(BaseUserManager):
-    def create_user(self, email, login, password=None):
+    def create_user(self, email, login, password=None, avatar=None):
         if not email:
             raise ValueError('Email is required')
         if not login:
@@ -13,6 +13,7 @@ class CustomUserManager(BaseUserManager):
         user = self.model(
             email=self.normalize_email(email),
             login=login,
+            avatar=avatar,
         )
         user.set_password(password)
         user.save(using=self._db)

@@ -28,9 +28,12 @@ class CustomUserSerializer(ModelSerializer):
 class BlogSerializer(ModelSerializer):
     class Meta:
         model = Blog
+        read_only_fields = ('slug',)
         fields = [
             'title',
             'owner',
+            'description',
+            'slug',
         ]
 
     owner = CustomUserSerializer(read_only=True)
@@ -69,10 +72,27 @@ class PostSerializer(ModelSerializer):
         return Comment.objects.filter(post=instance).count()
 
     def get_is_liked(self, instance: PostItem):
+        if not self.context['request'].user.is_authenticated:
+            return False
         return UserPostRelation.objects.filter(post=instance, like=True, user=self.context['request'].user).exists()
 
     blog = BlogSerializer(read_only=True)
     tags = TagSerializer(read_only=True, many=True)
+
+
+class FullBlogSerializer(ModelSerializer):
+    class Meta:
+        model = Blog
+        fields = [
+            'posts',
+            'title',
+            'owner',
+            'description',
+            'slug',
+        ]
+
+    posts = PostSerializer(read_only=True, many=True)
+    owner = CustomUserSerializer(read_only=True)
 
 
 class PostLikeSerializer(ModelSerializer):
@@ -104,6 +124,7 @@ class CreatePostSerializer(ModelSerializer):
             'description',
             'tags',
             'blog',
+            'slug',
         ]
 
     def to_representation(self, instance):
@@ -124,8 +145,10 @@ class CreateBlogSerializer(ModelSerializer):
         fields = [
             'title',
             'owner',
+            'description',
+            'slug',
         ]
-        read_only_fields = ['owner']
+        read_only_fields = ['owner', 'slug']
 
     owner = CustomUserSerializer(read_only=True)
 
