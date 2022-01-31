@@ -1,5 +1,6 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, filters
+from rest_framework.filters import SearchFilter
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 
@@ -14,7 +15,8 @@ class PostsListView(generics.ListAPIView):
     # permission_classes = [IsAuthenticated]
     queryset = PostItem.objects.all().order_by('views_count')
     serializer_class = PostSerializer
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    search_fields = ['title', 'description']
     filterset_class = PostFilterSet
 
     def get_serializer(self, posts, *args, **kwargs):

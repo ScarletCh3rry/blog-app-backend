@@ -89,6 +89,7 @@ class FullBlogSerializer(ModelSerializer):
             'owner',
             'description',
             'slug',
+            'id'
         ]
 
     posts = PostSerializer(read_only=True, many=True)
@@ -118,6 +119,7 @@ class PostCommentSerializer(ModelSerializer):
 
 class CreatePostSerializer(ModelSerializer):
     class Meta:
+        read_only_fields = ['slug']
         model = PostItem
         fields = [
             'title',
