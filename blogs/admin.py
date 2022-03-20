@@ -4,7 +4,7 @@ from .models import *
 
 @admin.register(PostItem)
 class PostItemAdmin(admin.ModelAdmin):
-    readonly_fields = ('likes_count', 'comments_count', 'quizzes_count', 'views_count')
+    readonly_fields = ('likes_count', 'comments_count', 'quizzes_count', 'views_count', 'slug')
 
 
 @admin.register(Tag)

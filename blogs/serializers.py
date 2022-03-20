@@ -84,7 +84,6 @@ class FullBlogSerializer(ModelSerializer):
     class Meta:
         model = Blog
         fields = [
-            'posts',
             'title',
             'owner',
             'description',
@@ -92,7 +91,6 @@ class FullBlogSerializer(ModelSerializer):
             'id'
         ]
 
-    posts = PostSerializer(read_only=True, many=True)
     owner = CustomUserSerializer(read_only=True)
 
 

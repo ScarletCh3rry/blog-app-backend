@@ -56,6 +56,13 @@ class CreateBlogView(generics.CreateAPIView):
     permission_classes = [IsAuthenticated]
 
 
+class UserBlogsView(generics.ListAPIView):
+    serializer_class = FullBlogSerializer
+
+    def get_queryset(self):
+        return Blog.objects.filter(owner__login=self.kwargs['login'])
+
+
 class BlogView(generics.RetrieveAPIView):
     serializer_class = FullBlogSerializer
     queryset = Blog.objects.all()

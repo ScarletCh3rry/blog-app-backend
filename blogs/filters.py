@@ -7,10 +7,11 @@ from blogs.models import PostItem, Tag
 class PostFilterSet(FilterSet):
     class Meta:
         model = PostItem
-        fields = ['tags', 'owner']
+        fields = ['tags', 'owner', 'blog']
 
     tags = CharFilter(field_name="tags__slug")
     owner = CharFilter(field_name="blog__owner__login")
+    blog = CharFilter(field_name="blog__slug")
 
 # class TagFilterSet(FilterSet):
 #     class Meta:

@@ -35,6 +35,16 @@ class UserSerializer(ModelSerializer):
         return instance.blogs.aggregate(Count('posts'))['posts__count']
 
 
+class UserEditSerializer(ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = [
+            'login',
+            'email',
+            'avatar'
+        ]
+
+
 class RegisterSerializer(ModelSerializer):
     password = serializers.CharField(min_length=4, max_length=25, write_only=True)
 
