@@ -1,0 +1,1 @@
+web: gunicorn game_forum_backend.wsgi:application --log-file -
