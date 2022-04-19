@@ -116,6 +116,11 @@ class PostCommentSerializer(ModelSerializer):
 
 
 class CreatePostSerializer(ModelSerializer):
+    blog = serializers.SlugRelatedField(
+        slug_field='slug',
+        queryset=Blog.objects.all()
+    )
+
     class Meta:
         read_only_fields = ['slug']
         model = PostItem
@@ -130,11 +135,12 @@ class CreatePostSerializer(ModelSerializer):
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         representation['tags'] = TagSerializer(Tag.objects.filter(id__in=representation['tags']), many=True).data
-        representation['blog'] = BlogSerializer(Blog.objects.get(id=representation['blog'])).data
+        representation['blog'] = BlogSerializer(Blog.objects.get(slug=representation['blog'])).data
         return representation
 
     def validate(self, attrs):
-        if not self.context['request'].user.blogs.filter(id=attrs['blog'].id).exists():
+        # if not self.context['request'].user.blogs.filter(slug=attrs['blog']).exists():
+        if not attrs['blog'].owner == self.context['request'].user:
             raise serializers.ValidationError({'blog': 'Низя саздавать пасты для блогафф'})
         return super().validate(attrs)
 
