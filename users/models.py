@@ -13,9 +13,10 @@ class CustomUserManager(BaseUserManager):
         user = self.model(
             email=self.normalize_email(email),
             login=login,
-            avatar=avatar,
         )
         user.set_password(password)
+        if avatar:
+            user.avatar = avatar
         user.save(using=self._db)
         return user
 
@@ -71,3 +72,5 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.login
+
+

@@ -2,7 +2,7 @@ from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
 from rest_framework.serializers import ModelSerializer
 
-from blogs.models import PostItem, Tag, Blog, UserPostRelation, Comment
+from blogs.models import PostItem, Tag, Blog, UserPostRelation, Comment, Subscription, Quiz
 from users.models import CustomUser
 
 
@@ -160,3 +160,46 @@ class CreateBlogSerializer(ModelSerializer):
 
     def save(self, **kwargs):
         return super().save(**kwargs, owner=self.context['request'].user)
+
+
+class SubscriptionSerializer(ModelSerializer):
+    class Meta:
+        model = Subscription
+        fields = [
+            'subscription',
+        ]
+
+
+class SubscriptionStatusSerializer(ModelSerializer):
+    class Meta:
+        model = Subscription
+        fields = [
+            'subscription_status'
+        ]
+
+
+class QuestionSerializer(ModelSerializer):
+    class Meta:
+        model = Quiz
+        fields = [
+            'question'
+        ]
+
+
+class QuizSerializer(ModelSerializer):
+    class Meta:
+        model = Quiz
+        fields = [
+            'quiz',
+            'questions'
+        ]
+
+    questions = QuestionSerializer(read_only=True, many=True)
+
+
+class AnswerSerializer(ModelSerializer):
+    class Meta:
+        model = Quiz
+        fields = [
+            'answer'
+        ]

@@ -13,7 +13,7 @@ class PostItem(models.Model):
         verbose_name_plural = 'Посты'
         unique_together = ('title', 'blog')
 
-    title = models.CharField(max_length=20, verbose_name='Название поста')
+    title = models.CharField(max_length=50, verbose_name='Название поста')
     description = models.TextField(verbose_name='Описание поста')
     tags = models.ManyToManyField('Tag', verbose_name='Теги поста', related_name='posts')
     creation_date = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания поста')
@@ -48,7 +48,7 @@ class Tag(models.Model):
         verbose_name = 'Тег поста'
         verbose_name_plural = 'Теги постов'
 
-    name = models.CharField(max_length=20, verbose_name='Имя тега')
+    name = models.CharField(max_length=25, verbose_name='Имя тега')
     slug = models.SlugField(verbose_name="Путь", unique=True)
 
     def __str__(self):
@@ -65,8 +65,8 @@ class Blog(models.Model):
         verbose_name_plural = 'Блоги'
         unique_together = ('title', 'owner')
 
-    title = models.CharField(max_length=20, verbose_name='Название блога')
-    description = models.CharField(max_length=400, verbose_name='Описание блога')
+    title = models.CharField(max_length=50, verbose_name='Название блога')
+    description = models.CharField(max_length=1000, verbose_name='Описание блога')
     owner = models.ForeignKey(CustomUser, verbose_name='Владелец блога', related_name='blogs', on_delete=CASCADE)
     slug = models.SlugField(verbose_name='Путь блога')
 
@@ -89,10 +89,54 @@ class Comment(models.Model):
     post = models.ForeignKey(PostItem, verbose_name='Откомментированный пост', related_name='comments',
                              on_delete=CASCADE)
 
-# class Quiz(models.Model):
-#     class Meta:
-#         verbose_name = 'Комментарий'
-#         verbose_name_plural = 'Комментарии'
-#
-#     post = models.ForeignKey(PostItem, verbose_name='Откомментированный пост', related_name='comments',
-#                              on_delete=CASCADE)
+
+class Subscription(models.Model):
+    class Meta:
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
+
+    subscription_status = models.BooleanField(verbose_name='Подписан?', default=False)
+    user_who_subscribed = models.ForeignKey(CustomUser, verbose_name='Тот кто подписалсля',
+                                            related_name='subscriptions',
+                                            on_delete=CASCADE)
+    user_you_subscribed_to = models.ForeignKey(CustomUser, verbose_name='Тот на кого подписались',
+                                               related_name='subscribers',
+                                               on_delete=CASCADE)
+
+
+class Quiz(models.Model):
+    class Meta:
+        verbose_name = 'Опрос'
+        verbose_name_plural = 'Опросы'
+
+    post = models.ForeignKey(PostItem, verbose_name='Пост опроса', related_name='posts',
+                             on_delete=CASCADE)
+
+
+class Question(models.Model):
+    class Meta:
+        verbose_name = 'Вопрос'
+        verbose_name_plural = 'Вопросы'
+
+    question = models.CharField(max_length=70, verbose_name='Вопрос')
+    quiz = models.ForeignKey(Quiz, verbose_name='Опрос вопроса', related_name='questions',
+                             on_delete=CASCADE)
+
+
+class Answer(models.Model):
+    class Meta:
+        verbose_name = 'Ответ'
+        verbose_name_plural = 'Ответы'
+
+    answer = models.CharField(max_length=70, verbose_name='Ответ на вопрос')
+    question = models.ForeignKey(Question, verbose_name='Вопрос ответа', related_name='answers',
+                                 on_delete=CASCADE)
+
+
+class PassedQuestion(models.Model):
+    class Meta:
+        verbose_name = 'Пройденный вопрос'
+        verbose_name_plural = 'Пройденные вопросы'
+
+    question = models.ForeignKey(Question, verbose_name='Вопрос',
+                                 related_name='passed_questions', on_delete=CASCADE)

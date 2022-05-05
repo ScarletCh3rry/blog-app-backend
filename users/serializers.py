@@ -6,16 +6,20 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer, Toke
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from blogs.models import Subscription
 from users.get_domain import get_web_url
 from users.models import CustomUser
 
 
 class TokenWithUsernameSerializer(TokenObtainPairSerializer):
     def get_token(self, user: CustomUser):
-        token = super().get_token(user)
-        token['name'] = user.login
-        token['avatar'] = get_web_url(self.context['request']) + user.avatar.url
-        return token
+        try:
+            token = super().get_token(user)
+            token['name'] = user.login
+            token['avatar'] = get_web_url(self.context['request']) + user.avatar.url
+            return token
+        except Exception as e:
+            print(e)
 
 
 class CustomTokenRefreshSerializer(TokenRefreshSerializer):
@@ -55,13 +59,22 @@ class UserSerializer(ModelSerializer):
             'date_joined',
             'avatar',
             'posts_count',
-            'id'
+            'id',
+            'subscription_status'
         ]
 
     posts_count = SerializerMethodField()
+    subscription_status = SerializerMethodField()
 
     def get_posts_count(self, instance: CustomUser):
         return instance.blogs.aggregate(Count('posts'))['posts__count']
+
+    def get_subscription_status(self, instance: CustomUser):
+        myself = self.context['request'].user
+        subscription = Subscription.objects.filter(user_you_subscribed_to=instance, user_who_subscribed=myself).first()
+        if subscription is None:
+            return False
+        return subscription.subscription_status
 
 
 class UserEditSerializer(ModelSerializer):
@@ -89,6 +102,6 @@ class RegisterSerializer(ModelSerializer):
             'password': {'write_only': True}
         }
 
-        def create(self, validated_data):
-            return CustomUser.objects.create_user(login=validated_data['login'], password=validated_data['password'], avatar=validated_data['avatar'])
-
+    def create(self, validated_data):
+        return CustomUser.objects.create_user(email=validated_data['email'], login=validated_data['login'],
+                                              password=validated_data['password'], avatar=validated_data.get('avatar'))

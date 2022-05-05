@@ -1,13 +1,14 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, filters
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 
 from blogs.filters import PostFilterSet
-from blogs.models import PostItem, UserPostRelation, Tag, Blog
+from blogs.models import PostItem, UserPostRelation, Tag, Blog, Subscription
 from blogs.serializers import PostSerializer, PostLikeSerializer, TagSerializer, CreatePostSerializer, \
-    CreateBlogSerializer, BlogSerializer, FullBlogSerializer
+    CreateBlogSerializer, BlogSerializer, FullBlogSerializer, SubscriptionSerializer, SubscriptionStatusSerializer
 from users.models import CustomUser
 
 
@@ -81,3 +82,32 @@ class PostView(generics.RetrieveAPIView):
                                 blog__slug=self.kwargs['blog_slug'],
                                 slug=self.kwargs['post_slug'])
         return obj
+
+
+class SubscriptionView(generics.ListAPIView):
+    serializer_class = PostSerializer
+    permission_classes = [IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    search_fields = ['title', 'description']
+    filterset_class = PostFilterSet
+
+    def get_queryset(self):
+        user = CustomUser.objects.get(login=self.kwargs['login'])
+        return PostItem.objects.filter(
+            blog__owner__in=user.subscriptions.filter(subscription_status=True).values_list('user_you_subscribed_to',
+                                                                                            flat=True))
+
+
+class SubscriptionUpdateView(generics.UpdateAPIView):
+    permission_classes = [IsAuthenticated]
+    queryset = Subscription.objects.all()
+    serializer_class = SubscriptionStatusSerializer
+
+    def get_object(self):
+        if self.request.user.login == self.kwargs['login']:
+            raise PermissionDenied('Вы не можете подписаться на себя')
+        obj, _ = Subscription.objects.get_or_create(user_who_subscribed=self.request.user,
+                                                    user_you_subscribed_to=CustomUser.objects.get(
+                                                        login=self.kwargs['login']))
+        return obj
+
