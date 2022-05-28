@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.urls import path
 
 from blogs.views import PostsListView, LikePostView, PostTagsView, CreatePostView, CreateBlogView, BlogView, PostView, \
-    UserBlogsView, SubscriptionView, SubscriptionUpdateView
+    UserBlogsView, SubscriptionView, SubscriptionUpdateView, DeletePostView
 
 urlpatterns = [
     path('posts/', PostsListView.as_view()),
@@ -15,5 +15,5 @@ urlpatterns = [
     path('<str:login>/<str:slug>/', BlogView.as_view()),
     path('<str:login>/<str:blog_slug>/<str:post_slug>/', PostView.as_view()),
     path('<str:login>/', UserBlogsView.as_view()),
-    path('posts/<str:post_slug>/', PostView.as_view()),
+    path('<str:login>/<str:blog_slug>/<str:post_slug>/delete-post/', DeletePostView.as_view()),
 ]

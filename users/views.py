@@ -1,4 +1,6 @@
+from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.filters import SearchFilter
 from rest_framework.generics import get_object_or_404
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from rest_framework import generics
@@ -13,8 +15,10 @@ class TokenWithUsernameObtainPairView(TokenObtainPairView):
 
 
 class UserView(generics.ListAPIView):
-    serializer_class = UserSerializer
     queryset = CustomUser.objects.all().order_by('login')
+    serializer_class = UserSerializer
+    filter_backends = [SearchFilter]
+    search_fields = ['login']
 
 
 class Register(generics.CreateAPIView):

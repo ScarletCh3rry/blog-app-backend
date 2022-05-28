@@ -53,7 +53,8 @@ class PostSerializer(ModelSerializer):
             'views_count',
             'blog',
             'id',
-            'is_liked'
+            'is_liked',
+            'slug'
         ]
         read_only_fields = ['likes_count', 'comments_count', 'quizzes_count', 'views_count']
 

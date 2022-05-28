@@ -14,7 +14,7 @@ from users.models import CustomUser
 
 class PostsListView(generics.ListAPIView):
     # permission_classes = [IsAuthenticated]
-    queryset = PostItem.objects.all().order_by('views_count')
+    queryset = PostItem.objects.all().order_by('-creation_date', 'views_count')
     serializer_class = PostSerializer
     filter_backends = [DjangoFilterBackend, SearchFilter]
     search_fields = ['title', 'description']
@@ -111,3 +111,16 @@ class SubscriptionUpdateView(generics.UpdateAPIView):
                                                         login=self.kwargs['login']))
         return obj
 
+
+class DeletePostView(generics.DestroyAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        if self.request.user.login != self.kwargs['login']:
+            raise PermissionDenied('Вы не можете удалить чужой пост')
+        return PostItem.objects.all()
+
+    def get_object(self):
+        return PostItem.objects.get(blog__owner__login=self.kwargs['login'],
+                                    blog__slug=self.kwargs['blog_slug'],
+                                    slug=self.kwargs['post_slug'])

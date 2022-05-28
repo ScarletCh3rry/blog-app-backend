@@ -50,6 +50,7 @@ class CustomTokenRefreshSerializer(TokenRefreshSerializer):
 
 
 class UserSerializer(ModelSerializer):
+
     class Meta:
         model = CustomUser
         fields = [
@@ -70,6 +71,8 @@ class UserSerializer(ModelSerializer):
         return instance.blogs.aggregate(Count('posts'))['posts__count']
 
     def get_subscription_status(self, instance: CustomUser):
+        if not self.context['request'].user.is_authenticated:
+            return False
         myself = self.context['request'].user
         subscription = Subscription.objects.filter(user_you_subscribed_to=instance, user_who_subscribed=myself).first()
         if subscription is None:
