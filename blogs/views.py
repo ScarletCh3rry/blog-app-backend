@@ -4,11 +4,15 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.filters import SearchFilter
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from blogs.filters import PostFilterSet
-from blogs.models import PostItem, UserPostRelation, Tag, Blog, Subscription
+from blogs.models import PostItem, UserPostRelation, Tag, Blog, Subscription, Comment, PassedQuestion, Quiz, Answer
+from blogs.permissions import OnlyOwnPost
 from blogs.serializers import PostSerializer, PostLikeSerializer, TagSerializer, CreatePostSerializer, \
-    CreateBlogSerializer, BlogSerializer, FullBlogSerializer, SubscriptionSerializer, SubscriptionStatusSerializer
+    CreateBlogSerializer, BlogSerializer, FullBlogSerializer, SubscriptionSerializer, SubscriptionStatusSerializer, \
+    PostCommentSerializer, QuizSerializer, QuestionSerializer, AnswerSerializer, PassedQuestionSerializer, \
+    CreateQuestionSerializer
 from users.models import CustomUser
 
 
@@ -73,6 +77,19 @@ class BlogView(generics.RetrieveAPIView):
         return obj
 
 
+class DeleteBlogView(generics.DestroyAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        if self.request.user.login != self.kwargs['login']:
+            raise PermissionDenied('Вы не можете удалить чужой блог')
+        return Blog.objects.all()
+
+    def get_object(self):
+        return Blog.objects.get(owner__login=self.kwargs['login'],
+                                slug=self.kwargs['slug'])
+
+
 class PostView(generics.RetrieveAPIView):
     serializer_class = PostSerializer
     queryset = PostItem.objects.all()
@@ -124,3 +141,84 @@ class DeletePostView(generics.DestroyAPIView):
         return PostItem.objects.get(blog__owner__login=self.kwargs['login'],
                                     blog__slug=self.kwargs['blog_slug'],
                                     slug=self.kwargs['post_slug'])
+
+
+class CommentsView(generics.ListAPIView):
+    serializer_class = PostCommentSerializer
+
+    def get_queryset(self):
+        return Comment.objects.filter(post__slug=self.kwargs['post_slug'])
+
+
+class CreateCommentView(generics.CreateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = PostCommentSerializer
+
+
+class CreateQuizView(generics.CreateAPIView):
+    permission_classes = [IsAuthenticated, OnlyOwnPost]
+    serializer_class = QuizSerializer
+
+
+class QuizListView(generics.ListAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = QuizSerializer
+
+    # queryset = Quiz.objects.all()
+
+    def get_queryset(self):
+        return Quiz.objects.filter(post__slug=self.kwargs['post_slug'])
+
+
+class QuizItemView(generics.RetrieveAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = QuizSerializer
+    lookup_field = 'slug'
+    lookup_url_kwarg = 'quiz_slug'
+
+    def get_queryset(self):
+        return Quiz.objects.filter(slug=self.kwargs['quiz_slug'])
+
+
+class CreateQuestionView(generics.CreateAPIView):
+    permission_classes = [IsAuthenticated, OnlyOwnPost]
+    serializer_class = CreateQuestionSerializer
+
+
+# class QuestionsView(generics.ListAPIView):
+#     permission_classes = [IsAuthenticated]
+#     serializer_class = QuestionSerializer
+
+
+# class AnswersView(generics.ListAPIView):
+#     permission_classes = [IsAuthenticated]
+#     serializer_class = AnswerSerializer
+
+
+class PassedQuestionView(generics.UpdateAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def patch(self, request, *args, **kwargs):
+        answer = Answer.objects.get(id=self.request.data['answer'])
+        user = CustomUser.objects.get(login=self.kwargs['login'])
+        passed_question = PassedQuestion.objects.filter(user=user, answer__question=answer.question).first()
+        if passed_question is None:
+            passed_question = PassedQuestion.objects.create(user=user, answer=answer)
+        passed_question.answer = answer
+        passed_question.save()
+        return Response(answer.answer)
+
+
+class DeleteQuizView(generics.DestroyAPIView):
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        if self.request.user.login != self.kwargs['login']:
+            raise PermissionDenied('Вы не можете удалить чужой квиз')
+        return Quiz.objects.all()
+
+    def get_object(self):
+        return Quiz.objects.get(post__blog__owner__login=self.kwargs['login'],
+                                post__blog__slug=self.kwargs['blog_slug'],
+                                post__slug=self.kwargs['post_slug'],
+                                slug=self.kwargs['quiz_slug'])

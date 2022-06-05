@@ -109,8 +109,15 @@ class Quiz(models.Model):
         verbose_name = 'Опрос'
         verbose_name_plural = 'Опросы'
 
+    title = models.CharField(max_length=70, verbose_name='Вопрос', default='', unique=True)
     post = models.ForeignKey(PostItem, verbose_name='Пост опроса', related_name='posts',
                              on_delete=CASCADE)
+
+    slug = models.SlugField(verbose_name='Путь опроса', default='', unique=True)
+
+    def save(self, *args, **kwargs):
+        self.slug = use_slugify(self.title)
+        super().save(*args, **kwargs)
 
 
 class Question(models.Model):
@@ -128,7 +135,7 @@ class Answer(models.Model):
         verbose_name = 'Ответ'
         verbose_name_plural = 'Ответы'
 
-    answer = models.CharField(max_length=70, verbose_name='Ответ на вопрос')
+    answer = models.CharField(max_length=70, verbose_name='Ответ на вопрос', default='')
     question = models.ForeignKey(Question, verbose_name='Вопрос ответа', related_name='answers',
                                  on_delete=CASCADE)
 
@@ -138,5 +145,7 @@ class PassedQuestion(models.Model):
         verbose_name = 'Пройденный вопрос'
         verbose_name_plural = 'Пройденные вопросы'
 
-    question = models.ForeignKey(Question, verbose_name='Вопрос',
-                                 related_name='passed_questions', on_delete=CASCADE)
+    answer = models.ForeignKey(Answer, verbose_name='Ответ',
+                               related_name='passed_questions', default='', on_delete=CASCADE)
+    user = models.ForeignKey(CustomUser, verbose_name='Пользователь который дал ответ', related_name='passed_question',
+                             on_delete=CASCADE)
