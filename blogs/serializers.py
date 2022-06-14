@@ -1,3 +1,4 @@
+from django.db.models import Sum
 from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
 from rest_framework.serializers import ModelSerializer
@@ -41,6 +42,7 @@ class BlogSerializer(ModelSerializer):
 
 
 class PostSerializer(ModelSerializer):
+
     class Meta:
         model = PostItem
         fields = [
@@ -55,7 +57,8 @@ class PostSerializer(ModelSerializer):
             'blog',
             'id',
             'is_liked',
-            'slug'
+            'slug',
+            'image'
         ]
         read_only_fields = ['likes_count', 'comments_count', 'quizzes_count', 'views_count']
 
@@ -146,6 +149,7 @@ class CreatePostSerializer(ModelSerializer):
             'tags',
             'blog',
             'slug',
+            'image'
         ]
 
     def to_representation(self, instance):
@@ -159,6 +163,15 @@ class CreatePostSerializer(ModelSerializer):
         if not attrs['blog'].owner == self.context['request'].user:
             raise serializers.ValidationError({'blog': 'Нельзя создавать посты для чужих блогов'})
         return super().validate(attrs)
+
+
+class EditPostSerializer(ModelSerializer):
+    class Meta:
+        model = PostItem
+        fields = [
+            'image'
+        ]
+
 
 
 class CreateBlogSerializer(ModelSerializer):
@@ -194,15 +207,6 @@ class SubscriptionStatusSerializer(ModelSerializer):
         ]
 
 
-class PassedQuestionSerializer(ModelSerializer):
-    class Meta:
-        model = PassedQuestion
-        fields = [
-            'answer',
-            'user'
-        ]
-
-
 class AnswerSerializer(ModelSerializer):
     class Meta:
         model = Answer
@@ -218,6 +222,18 @@ class AnswerSerializer(ModelSerializer):
         return instance.passed_questions.count()
 
 
+class PassedQuestionSerializer(ModelSerializer):
+    class Meta:
+        model = PassedQuestion
+        fields = [
+            'answer',
+            'user'
+        ]
+
+    answer = AnswerSerializer()
+    user = CustomUserSerializer()
+
+
 class QuestionSerializer(ModelSerializer):
     class Meta:
         model = Question
@@ -225,11 +241,18 @@ class QuestionSerializer(ModelSerializer):
             'question',
             'answers',
             'id',
-            'chosen'
+            'chosen',
+            'total_answers'
         ]
 
     chosen = SerializerMethodField()
     answers = AnswerSerializer(many=True)
+    total_answers = SerializerMethodField()
+
+    def get_total_answers(self, instance: Question):
+        all_answers = instance.answers.all()
+        all_passed_answers = PassedQuestion.objects.filter(answer__in=all_answers).all().count()
+        return all_passed_answers
 
     def get_chosen(self, instance: Question):
         user: CustomUser = self.context['request'].user
@@ -256,8 +279,9 @@ class QuizSerializer(ModelSerializer):
 
     def get_sub_answers_list(self, instance: Quiz):
         user: CustomUser = self.context['request'].user
-        user_you_subscribed_to = user.subscriptions.values_list('user_you_subscribed_to',
-                                                                flat=True)
+        user_you_subscribed_to = user.subscriptions.filter(subscription_status=True).values_list(
+            'user_you_subscribed_to',
+            flat=True)
         answers = PassedQuestion.objects.filter(user__in=user_you_subscribed_to, answer__question__quiz=instance)
         return PassedQuestionSerializer(answers, many=True).data
 

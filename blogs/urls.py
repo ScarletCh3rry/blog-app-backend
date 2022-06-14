@@ -3,7 +3,8 @@ from django.urls import path
 
 from blogs.views import PostsListView, LikePostView, PostTagsView, CreatePostView, CreateBlogView, BlogView, PostView, \
     UserBlogsView, SubscriptionView, SubscriptionUpdateView, DeletePostView, CommentsView, CreateCommentView, \
-    CreateQuizView, QuizListView, CreateQuestionView, QuizItemView, PassedQuestionView, DeleteQuizView, DeleteBlogView
+    CreateQuizView, QuizListView, CreateQuestionView, QuizItemView, PassedQuestionView, DeleteQuizView, DeleteBlogView, \
+    EditPostView
 
 urlpatterns = [
     path('posts/', PostsListView.as_view()),
@@ -16,6 +17,7 @@ urlpatterns = [
     path('<str:login>/<str:slug>/', BlogView.as_view()),
     path('<str:login>/<str:slug>/delete-blog/', DeleteBlogView.as_view()),
     path('<str:login>/<str:blog_slug>/<str:post_slug>/', PostView.as_view()),
+    path('<str:login>/<str:blog_slug>/<str:post_slug>/edit-post/', EditPostView.as_view()),
     path('<str:login>/<str:blog_slug>/<str:post_slug>/comments/', CommentsView.as_view()),
     path('<str:login>/<str:blog_slug>/<str:post_slug>/create-comment/', CreateCommentView.as_view()),
     path('<str:login>/', UserBlogsView.as_view()),

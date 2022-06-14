@@ -13,7 +13,7 @@ class PostItem(models.Model):
         verbose_name_plural = 'Посты'
         unique_together = ('title', 'blog')
 
-    title = models.CharField(max_length=50, verbose_name='Название поста')
+    title = models.CharField(max_length=50, verbose_name='Название поста', unique=True)
     description = models.TextField(verbose_name='Описание поста')
     tags = models.ManyToManyField('Tag', verbose_name='Теги поста', related_name='posts')
     creation_date = models.DateTimeField(auto_now_add=True, verbose_name='Дата создания поста')
@@ -23,6 +23,7 @@ class PostItem(models.Model):
     views_count = models.PositiveIntegerField(verbose_name='Количество просмотров', default=0)
     blog = models.ForeignKey('Blog', verbose_name='Блог', related_name='posts', on_delete=CASCADE)
     slug = models.SlugField(verbose_name='Путь поста')
+    image = models.ImageField(verbose_name='Картинка поста', null=True, blank=True, default=None)
 
     def __str__(self):
         return f'Пост: {self.title}'
@@ -48,7 +49,7 @@ class Tag(models.Model):
         verbose_name = 'Тег поста'
         verbose_name_plural = 'Теги постов'
 
-    name = models.CharField(max_length=25, verbose_name='Имя тега')
+    name = models.CharField(max_length=25, verbose_name='Имя тега', unique=True)
     slug = models.SlugField(verbose_name="Путь", unique=True)
 
     def __str__(self):
@@ -65,7 +66,7 @@ class Blog(models.Model):
         verbose_name_plural = 'Блоги'
         unique_together = ('title', 'owner')
 
-    title = models.CharField(max_length=50, verbose_name='Название блога')
+    title = models.CharField(max_length=50, verbose_name='Название блога', unique=True)
     description = models.CharField(max_length=1000, verbose_name='Описание блога')
     owner = models.ForeignKey(CustomUser, verbose_name='Владелец блога', related_name='blogs', on_delete=CASCADE)
     slug = models.SlugField(verbose_name='Путь блога')

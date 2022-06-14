@@ -12,7 +12,7 @@ from blogs.permissions import OnlyOwnPost
 from blogs.serializers import PostSerializer, PostLikeSerializer, TagSerializer, CreatePostSerializer, \
     CreateBlogSerializer, BlogSerializer, FullBlogSerializer, SubscriptionSerializer, SubscriptionStatusSerializer, \
     PostCommentSerializer, QuizSerializer, QuestionSerializer, AnswerSerializer, PassedQuestionSerializer, \
-    CreateQuestionSerializer
+    CreateQuestionSerializer, EditPostSerializer
 from users.models import CustomUser
 
 
@@ -54,6 +54,8 @@ class PostTagsView(generics.ListAPIView):
 class CreatePostView(generics.CreateAPIView):
     serializer_class = CreatePostSerializer
     permission_classes = [IsAuthenticated]
+
+
 
 
 class CreateBlogView(generics.CreateAPIView):
@@ -141,6 +143,35 @@ class DeletePostView(generics.DestroyAPIView):
         return PostItem.objects.get(blog__owner__login=self.kwargs['login'],
                                     blog__slug=self.kwargs['blog_slug'],
                                     slug=self.kwargs['post_slug'])
+
+
+class EditPostView(generics.UpdateAPIView):
+    serializer_class = EditPostSerializer
+    lookup_field = 'slug'
+    lookup_url_kwarg = 'post_slug'
+    queryset = PostItem.objects.all()
+
+    def get_object(self):
+        if self.request.user.login != self.kwargs["login"]:
+            raise PermissionDenied(detail="You can't change posts of other persons", code=None)
+        return get_object_or_404(self.queryset, blog__owner__login=self.kwargs["login"],
+                                 blog__slug=self.kwargs['blog_slug'],
+                                 slug=self.kwargs['post_slug'])
+
+    # def patch(self, request, *args, **kwargs):
+    #     image = self.request.data.get('image')
+    #     post = PostItem.objects.filter(blog__owner__login=self.kwargs['login'],
+    #                                    blog__slug=self.kwargs['blog_slug'],
+    #                                    slug=self.kwargs['post_slug']).first()
+    #     post.image = image
+    #     post.save()
+    #     return Response(post.image)
+
+
+    # def get_queryset(self):
+    #     return PostItem.objects.get(blog__owner__login=self.kwargs['login'],
+    #                                 blog__slug=self.kwargs['blog_slug'],
+    #                                 slug=self.kwargs['post_slug'])
 
 
 class CommentsView(generics.ListAPIView):
